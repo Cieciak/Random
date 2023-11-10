@@ -1,5 +1,43 @@
 import tkinter as tk
-import colorsys
+import colorsys, random
+from typing import Self
+
+class HSV:
+
+    def __init__(self, hue: float, saturation: float, value: float):
+        self.saturation = saturation
+        self.value      = value
+        self.hue        = hue
+
+    @staticmethod
+    def avg(c1: Self, c2: Self):
+
+        diff = c1.hue - c2.hue
+        if abs(diff) < .5:
+            hue = (c1.hue + c2.hue) * .5
+        else:
+            hue = (c1.hue + c2.hue) * .5 + .5
+
+        return HSV(hue, (c1.saturation + c2.saturation) * .5, (c1.value + c2.value) * .5)
+
+class RGB:
+
+
+    def __init__(self, red: float, green: float, blue: float):
+        self.green = green
+        self.blue  = blue
+        self.red   = red
+
+    @classmethod
+    def fromHSV(cls, hsv: HSV):
+        R, G, B = colorsys.hsv_to_rgb(hsv.hue, hsv.saturation, hsv.value)
+
+        return cls(R, G, B)
+
+    def hex(self, *, scale = 255) -> str:
+        return f'#{int(self.red * scale):02x}{int(self.green * scale):02x}{int(self.blue * scale):02x}'
+
+
 
 class Canvas:
 
@@ -15,10 +53,9 @@ class Canvas:
         self.canvas.grid()
 
     @staticmethod
-    def color(color: tuple[int, int, int], *, scale = 255) -> str: return f'#{int(color[0] * scale):02x}{int(color[1] * scale):02x}{int(color[2] * scale):02x}'
+    def color(color: HSV) -> str: return RGB.fromHSV(color).hex()
 
-
-    def tile(self, x: int, y: int, color: tuple[int, int, int]):
+    def tile(self, x: int, y: int, color: HSV):
         
         x_top = x * self.grid_size
         y_top = y * self.grid_size
@@ -30,10 +67,16 @@ class Canvas:
 
 if __name__ == '__main__':
 
-    c = Canvas(15, 1, grid_size=100)
+    c = Canvas(15, 15, grid_size=50)
 
     for i in range(15):
-        color = colorsys.hsv_to_rgb(i/15, 1, 1)
-        c.tile(i, 0, color)
+        color1 = HSV(random.random(), random.random(), random.random())
+        color2 = HSV(random.random(), random.random(), random.random())
+
+        color3 = HSV.avg(color1, color2)
+
+        c.tile(0, i, color1)
+        c.tile(1, i, color2)
+        c.tile(2, i, color3)
 
     c.root.mainloop()
