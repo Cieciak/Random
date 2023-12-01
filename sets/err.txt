@@ -1,0 +1,3 @@
+Packet: b'{"head": {"whoami": "ac1881ed471c494593dac1ca5ed780e5"}, "body": "hi mom"}\x01\x01'
+Message: b'{"head": {"whoami": "ac1881ed471c494593dac1ca5ed780e5"}, "body": "hi mom"}\x01\x01'
+b'{"head": {"whoami": "ac1881ed471c494593dac1ca5ed780e5"}, "body": "hi mom"}\x01\x01'

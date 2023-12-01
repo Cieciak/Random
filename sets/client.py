@@ -1,42 +1,122 @@
-import socket
-import threading
+import socket, select, os, os.path, uuid, pprint
+import json 
 
-# Server configuration
-SERVER_HOST = '127.0.0.1'
-SERVER_PORT = 12345
+def recvall(sock: socket.socket, bufsize: int) -> bytes:
+    output = b''
+    while True:
+        raw_data = sock.recv(bufsize)
+        output += raw_data
+        if not raw_data or output.endswith(b'}\01\01'): return output
 
-# 1st send, 2nd recv
-class Client:
+class CPPP_JSON_Encoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, bytearray):
+            return obj.decode('UTF-8')
+        elif isinstance(obj, bytes):
+            return obj.decode('UTF-8')
+        return json.JSONEncoder.default(self, obj)
 
-    def __init__(self, addr: str, port: int):
-        self.addr = addr
-        self.port = port
+class TempParser:
 
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    def __init__(self) -> None:
+        pass
 
-    def connect(self):
-        self.socket.connect((self.addr, self.port))
+    def parse(self, raw_data: bytearray) -> tuple[dict, object]:
+        parsed = json.loads(raw_data[:-2])
+        return parsed['head'], bytes(parsed['body'], 'utf-8')
 
-    def __handle_incoming(self):
-        data = ''
-        while True:
-            try:data = self.socket.recv(1024)
-            except OSError: pass
-            if data == b'END': break
-            print(data)
+class Message:
+    parser: TempParser = TempParser()
 
-    def listen(self):
-        self.__listening_thread = threading.Thread(
-            target = self.__handle_incoming,
+    def __init__(self, raw_data: bytes = None, head: dict = None, body: bytearray = None):
+        self.__raw: bytes = raw_data
+
+        if raw_data:
+            self.head, self.body = self.parser.parse(raw_data)
+        else:
+            self.head:      dict = head
+            self.body: bytearray = body
+
+    def __repr__(self) -> str:
+        return f'Header: {pprint.pformat(self.head, indent = 4)}\nBody: [\n{self.body}\n]'
+
+    @classmethod
+    def empty(cls):
+        return cls(head = {'method': 'NONE'}, body = b'')
+
+    @classmethod
+    def error(cls, name: str, reason: str = None):
+        message = f'Error {name}\nReason: {reason}'
+
+        return cls(
+            head = {'method': 'ERROR'},
+            body = bytes(message, 'utf-8')
         )
-        self.__listening_thread.start()
 
-    def send(self, data):
-        self.socket.send(data)
+    @classmethod
+    def response(cls, payload: bytes):
+        return cls(
+            head = {'method': 'RESPONSE'},
+            body = payload
+        )
 
-# Create a TCP socket
-client = Client(SERVER_HOST, SERVER_PORT)
-client.listen()
+    @property
+    def raw(self):
+        JSON = {
+            'head': self.head,
+            'body': self.body,
+        }
 
-client.connect()
-while True: client.send(bytes(input('Send: '), 'utf-8'))
+        self.__raw = bytes(
+            json.dumps(
+                JSON,
+                cls = CPPP_JSON_Encoder,
+            ),
+            encoding = "utf-8"
+        ) + b'\01\01'
+        
+        return self.__raw
+
+    def add_header(self, header: dict):
+        for key, value in header.items(): self.head[key] = value
+
+    def add_body(self, data: bytes):
+        self.body = data
+
+class Client:
+    MAX_BUFFER = 4096
+
+    def __init__(self):
+        self.whoami = uuid.uuid4()
+        self.sock = socket.socket()
+
+    def request(self, address: str, port: int, message: Message) -> Message:
+        sock = socket.socket()
+        sock.connect((address, port))
+        message.add_header({'whoami': self.whoami.bytes.hex()})
+        sock.sendall(message.raw)
+
+        response = recvall(sock, self.MAX_BUFFER)
+        sock.close()
+
+        return Message(raw_data = response)
+
+    def connect(self, address: str, port: int):
+        self.sock.connect((address, port))
+
+    def send(self, message: Message):
+        message.add_header({'whoami': self.whoami.bytes.hex()})
+        self.sock.sendall(message.raw)
+
+
+if __name__ == '__main__':
+    CLIENT = Client()
+
+    
+
+    CLIENT.connect('127.0.0.1', 8000)
+    while True:
+        text = input('>>')
+        msg = Message(body=bytearray(text, 'utf-8'), head={})
+        CLIENT.send(msg)
+    input()
