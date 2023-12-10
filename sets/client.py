@@ -1,4 +1,4 @@
-import socket, threading
+import socket, threading, tkinter
 
 class Server:
     BUFFER_SIZE = 1024

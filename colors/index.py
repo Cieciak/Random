@@ -183,4 +183,4 @@ if __name__ == '__main__':
             c.tile(14, index, color)
 
         c.root.update()
-        input()
+        #input()
