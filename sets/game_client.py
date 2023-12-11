@@ -17,6 +17,10 @@ if __name__ == '__main__':
     set_var = tkinter.StringVar(root, '', 'set')
     card_var = tkinter.StringVar(root, '', 'card')
 
+    @SERVER.command('CONSOLE')
+    def console(ctx: networking.Server, address: networking.Address, body: str):
+        print(body)
+
     @SERVER.command('RESPONSE')
     def response(ctx: networking.Server, address: networking.Address, body: str):
         #print(f'Response from [{address.host}:{address.port}]: {body}')
@@ -70,5 +74,10 @@ if __name__ == '__main__':
 
     entry = tkinter.Entry(root, textvariable=var)
     entry.grid()
+
+    SERVER.send(bytes('MAKE-ROOM test','UTF-8'), networking.Address('127.0.0.1', 20000))
+    SERVER.send(bytes('JOIN-ROOM niko test','UTF-8'), networking.Address('127.0.0.1', 20000))
+    SERVER.send(bytes('START-GAME test','UTF-8'), networking.Address('127.0.0.1', 20000))
+
 
     root.mainloop()
