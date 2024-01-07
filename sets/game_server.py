@@ -31,24 +31,19 @@ if __name__ == '__main__':
 
     @SERVER.command('USE-CARD')
     def use_card(ctx: nt.Server, address: nt.Address, body: str):
-        body, name, used = body.split(' ')
+        room_name, player_name, card_name = body.split(' ')
 
-        room: game.Room = ctx.data['rooms'][body]
-        for player in room.players:
-            if player.name == name: break
-        
-        deck = player.cards
-        
-        for index, card in enumerate(deck):
-            if card.name == used: break
-
-        del deck[index]
-        player.cards = deck
-        ctx.data['rooms'][body] = room
-
-        
+        player: game.Player = ctx.data['rooms'][room_name].players[player_name]
 
 
+        for index, card in enumerate(player.cards):
+            if card.name == card_name: break
+
+        player.set = card(player.set)
+
+        del player.cards[index]
+
+        ctx.data['rooms'][room_name].players[player_name] = player
 
     @SERVER.command('RESPONSE')
     def response(ctx: nt.Server, address: nt.Address, body: str):
@@ -57,14 +52,6 @@ if __name__ == '__main__':
     @SERVER.command('ECHO')
     def echo(ctx: nt.Server, address: nt.Address, body: str):
         ctx.send(bytes(f'RESPONSE {body}', "UTF-8"), address)
-
-    @SERVER.command('ADD')
-    def add(ctx: nt.Server, address: nt.Address, body: str):
-        ctx.send(bytes(f'ADD-TO-SET {body}', "UTF-8"), address)
-
-    @SERVER.command('CADD')
-    def add(ctx: nt.Server, address: nt.Address, body: str):
-        ctx.send(bytes(f'ADD-CARD {body}', "UTF-8"), address)
 
     SERVER.serve()
     input('Press Enter to close the server!\n')

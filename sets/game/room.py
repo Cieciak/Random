@@ -4,7 +4,7 @@ from .cards import Card, CARDS
 class Room:
 
     def __init__(self, name: str):
-        self.players: set[Player] = dict
+        self.players: dict[str, Player] = dict()
         self.lock: bool = False
         self.name: str = name
 
@@ -16,6 +16,6 @@ class Room:
         else: self.players[p.name] = p
 
     def start(self):
-        for player in self.players:
-            player.generate_set()
+        for name, player in self.players.items():
             player.deal_cards(CARDS)
+            player.generate_set()
