@@ -1,0 +1,37 @@
+Nagłówek [6 Bajtów]:
+    GIF89a [6 Bajtów]
+
+Deskryptor Wyświetlacza [7 Bajtów]:
+    Szerokość [2 Bajty, LSB]
+    Wysokość [2 Bajty, LSB]
+    Flagi [1 Bajt]:
+        7     - Czy globalna paleta to następny blok
+        6 : 4 - Głębia kolorów
+        3     - Czy paleta jest posortowana
+        2 : 0 - Rozmiar palety kolorów
+    Index koloru tła [1 Bajt]
+    Pixel Aspect Ratio [1 Bajt] # 0x00 domyślnie
+
+Globalna Tablica Kolorów [3n Bajtów]:
+    lista:
+        Czerwony [1 Bajt]
+        Zielony [1 Bajt]
+        Niebieski [1 Bajt]
+
+Deskryptor Obrazu [10 Bajtów]:
+    Separator [1 Bajt] # 0x2C (",") domyślnie
+    Lewa krawędź [2 Bajty, LSB]
+    Górna krawędź [2 Bajty, LSB]
+    Szerokość [2 Bajty, LSB]
+    Wysokość [2 Bajty, LSB]
+    Flagi [1 Bajt]:
+        7 - Czy używać globalnej palety
+        6 - Format obrazu (0 - Sekwencyjny, 1 - Interlaced)
+        5 - Czy paleta jest posortowana
+        4 : 3 - Zarezerwowane
+        2 : 0 - Rozmiar lokalnej palety
+
+Blok Funkcyjny:
+    Separator [1 Bajt] # 0b00100001 ("!") domyślnie
+    Kod funkcji [1 Bajt]
+    
